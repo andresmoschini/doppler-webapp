@@ -2,10 +2,10 @@ import React from 'react';
 import HeaderNav from './HeaderNav/HeaderNav';
 import HeaderMessages from './HeaderMessages/HeaderMessages';
 import HeaderUserMenu from './HeaderUserMenu/HeaderUserMenu';
-import headerData from '../../headerData.json';
 import { FormattedMessage } from 'react-intl';
 
 const Header = (props) => {
+  const headerData = props.dopplerUserData;
   return (
     <div>
       {headerData.alert ? <HeaderMessages alert={headerData.alert} /> : null}
