@@ -9,10 +9,6 @@ import App from './App';
 import { IntlProvider } from 'react-intl';
 import messages_es from './i18n/es.json';
 import messages_en from './i18n/en.json';
-import jwt_decode from 'jwt-decode';
-
-//Add mock to decode jwt token and not fail
-jest.mock('jwt-decode');
 
 const messages = {
   es: messages_es,
@@ -27,20 +23,6 @@ const response = {
   },
 };
 
-const responseToken = {
-  data: {
-    jwtToken: 'token',
-  },
-};
-
-//Local storage mock
-const localStorageMock = {
-  getItem: jest.fn(),
-  setItem: jest.fn(),
-  removeItem: jest.fn(),
-};
-global.localStorage = localStorageMock;
-
 describe('App component', () => {
   afterEach(cleanup);
 
@@ -48,8 +30,6 @@ describe('App component', () => {
     axios.get = jest.fn((url) => {
       if (url === process.env.REACT_APP_API_URL + '/Reports/Reports/GetUserData') {
         return Promise.resolve(response);
-      } else {
-        return Promise.resolve(responseToken);
       }
     });
   });
@@ -63,14 +43,6 @@ describe('App component', () => {
   });
 
   it('fetches user and display user data', async () => {
-    const tokenDecodeData = {
-      email: 'fcoronel@makingsense',
-      name: 'fede',
-      lang: 'es',
-    };
-
-    jwt_decode.mockResolvedValue(tokenDecodeData);
-
     const { getByText } = render(
       <IntlProvider locale="en" messages={flattenMessages(messages['en'])}>
         <App />

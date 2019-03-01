@@ -7,7 +7,6 @@ import es from 'react-intl/locale-data/es';
 import messages_es from './i18n/es.json';
 import messages_en from './i18n/en.json';
 import { flattenMessages } from './utils';
-import jwt_decode from 'jwt-decode';
 import axios from 'axios';
 
 import Header from './components/Header/Header';
@@ -27,7 +26,6 @@ class App extends Component {
     const locale = navigator.language.toLowerCase().split(/[_-]+/)[0] || 'en';
     this.state = {
       user: null,
-      loginSession: {},
       i18n: {
         locale: locale,
         messages: flattenMessages(messages[locale]),
@@ -46,32 +44,6 @@ class App extends Component {
     clearInterval(this.interval);
   }
 
-  manageJwtToken() {
-    var encodedToken = localStorage.getItem('jwtToken');
-    if (encodedToken) {
-      try {
-        this.setState({ loginSession: this.decodeLoginSession(encodedToken) });
-        if (this.state.user.Email !== this.state.loginSession.email) {
-          this.saveStoredSession(this.state.loginSession);
-        }
-      } catch (error) {
-        this.logOut();
-        return;
-      }
-    } else {
-      axios
-        .get(process.env.REACT_APP_API_URL + '/Reports/Reports/GetJwtToken', {
-          withCredentials: 'include',
-        })
-        .then((response) => {
-          this.saveStoredSession({ token: response.data.jwtToken });
-        })
-        .catch((error) => {
-          this.logOut();
-        });
-    }
-  }
-
   getUserData() {
     axios
       .get(process.env.REACT_APP_API_URL + '/Reports/Reports/GetUserData', {
@@ -86,22 +58,7 @@ class App extends Component {
       });
   }
 
-  decodeLoginSession(jwtToken) {
-    var decodedToken = jwt_decode(jwtToken);
-    return {
-      token: jwtToken,
-      email: decodedToken.email,
-      name: decodedToken.name,
-      lang: decodedToken.lang,
-    };
-  }
-
-  saveStoredSession(loginSession) {
-    localStorage.setItem('jwtToken', loginSession.token);
-  }
-
   logOut() {
-    localStorage.removeItem('jwtToken');
     const currentUrlEncoded = encodeURI(window.location.href);
     // TODO: only use redirect on login, not in logout
     const loginUrl = `${process.env.REACT_APP_API_URL}/SignIn/index?redirect=${currentUrlEncoded}`;
