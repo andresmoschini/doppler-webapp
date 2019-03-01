@@ -7,8 +7,7 @@ import es from 'react-intl/locale-data/es';
 import messages_es from './i18n/es.json';
 import messages_en from './i18n/en.json';
 import { flattenMessages } from './utils';
-import axios from 'axios';
-
+import { DopplerSessionManager } from './services/dopplerSession';
 import Header from './components/Header/Header';
 import Footer from './components/Footer/Footer';
 
@@ -22,10 +21,13 @@ addLocaleData([...en, ...es]);
 class App extends Component {
   constructor() {
     super();
+
+    this.dopplerSessionManager = new DopplerSessionManager();
+
     //TODO: this hardcoded data will depend by the app language
     const locale = navigator.language.toLowerCase().split(/[_-]+/)[0] || 'en';
     this.state = {
-      user: null,
+      dopplerSession: this.dopplerSessionManager.session,
       i18n: {
         locale: locale,
         messages: flattenMessages(messages[locale]),
@@ -33,40 +35,18 @@ class App extends Component {
     };
   }
 
-  componentWillMount() {
-    this.getUserData();
-    this.interval = setInterval(() => {
-      this.getUserData();
-    }, 60000);
+  componentDidMount() {
+    this.dopplerSessionManager.initialize((s) => {
+      this.setState({ dopplerSession: s });
+    });
   }
 
   componentWillUnmount() {
-    clearInterval(this.interval);
-  }
-
-  getUserData() {
-    try {
-    const response = await axios
-      .get(process.env.REACT_APP_API_URL + '/Reports/Reports/GetUserData', {
-        withCredentials: true,
-      })
-
-      this.setState({ user: response.data.user });
-      this.manageJwtToken();
-    } catch(error) {
-      this.logOut();
-    }
-  }
-
-  logOut() {
-    const currentUrlEncoded = encodeURI(window.location.href);
-    // TODO: only use redirect on login, not in logout
-    const loginUrl = `${process.env.REACT_APP_API_URL}/SignIn/index?redirect=${currentUrlEncoded}`;
-    window.location.href = loginUrl;
+    this.dopplerSessionManager.finalize();
   }
 
   render() {
-    const isLoggedIn = !!this.state.user;
+    const isLoggedIn = this.state.dopplerSession.status === 'authenticated';
     const i18n = this.state.i18n;
     return (
       <IntlProvider locale={i18n.locale} messages={i18n.messages}>
