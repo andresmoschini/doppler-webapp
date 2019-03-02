@@ -1,5 +1,4 @@
 import React from 'react';
-import axios from 'axios';
 import { flattenMessages } from './utils';
 import { render, cleanup, wait } from 'react-testing-library';
 import 'jest-dom/extend-expect';
@@ -15,51 +14,55 @@ const messages = {
   en: messages_en,
 };
 
-const response = {
-  data: {
-    user: {
-      Email: 'fcoronel@makingsense.com',
+function createDoubleSessionManager() {
+  const double = {
+    initialize: (handler) => {
+      double.updateAppSession = handler;
     },
-  },
-};
+    finalize: () => {},
+    session: {
+      status: 'non-authenticated',
+    },
+  };
+  return double;
+}
 
 describe('App component', () => {
   afterEach(cleanup);
 
-  beforeEach(() => {
-    axios.get = jest.fn((url) => {
-      if (url === process.env.REACT_APP_API_URL + '/Reports/Reports/GetUserData') {
-        return Promise.resolve(response);
-      }
-    });
-  });
-
   it('renders app component', () => {
+    const dependencies = {
+      sessionManager: createDoubleSessionManager(),
+    };
+
     const { getByText } = render(
       <IntlProvider locale="en" messages={flattenMessages(messages['en'])}>
-        <App />
+        <App dependencies={dependencies} />
       </IntlProvider>,
     );
   });
 
-  it('fetches user and display user data', async () => {
+  it('updates content after successful authentication', async () => {
+    // Arrange
+    const expectedEmail = 'fcoronel@makingsense.com';
+
+    const dependencies = {
+      sessionManager: createDoubleSessionManager(),
+    };
+
     const { getByText } = render(
       <IntlProvider locale="en" messages={flattenMessages(messages['en'])}>
-        <App />
+        <App dependencies={dependencies} />
       </IntlProvider>,
     );
 
-    await wait(() => getByText(response.data.user.Email));
+    getByText('Loading...');
 
-    const userEmail = getByText(response.data.user.Email);
+    // Act
+    dependencies.sessionManager.updateAppSession({ status: 'authenticated' });
 
-    expect(userEmail).toBeDefined();
-    expect(axios.get).toHaveBeenCalledTimes(1);
-    expect(axios.get).toHaveBeenCalledWith(
-      process.env.REACT_APP_API_URL + '/Reports/Reports/GetUserData',
-      {
-        withCredentials: true,
-      },
-    );
+    // Assert
+    getByText(expectedEmail);
+    // TODO: test session manager behavior
   });
 });

@@ -7,7 +7,9 @@ import es from 'react-intl/locale-data/es';
 import messages_es from './i18n/es.json';
 import messages_en from './i18n/en.json';
 import { flattenMessages } from './utils';
-import { DopplerSessionManager } from './services/dopplerSession';
+import axios from 'axios';
+import { HttpDopplerMvcClient } from './services/doppler-mvc-client';
+import { OnlineSessionManager } from './services/session-manager';
 import Header from './components/Header/Header';
 import Footer from './components/Footer/Footer';
 
@@ -19,15 +21,22 @@ const messages = {
 addLocaleData([...en, ...es]);
 
 class App extends Component {
-  constructor() {
-    super();
+  constructor(props) {
+    super(props);
 
-    this.dopplerSessionManager = new DopplerSessionManager();
+    // TODO: Consider continue determining here default instance or moving all upside,
+    // forcing inject dependencies always
+    this.sessionManager =
+      (props.dependencies && props.dependencies.sessionManager) ||
+      new OnlineSessionManager(
+        new HttpDopplerMvcClient(axios, process.env.REACT_APP_API_URL),
+        60000,
+      );
 
     //TODO: this hardcoded data will depend by the app language
     const locale = navigator.language.toLowerCase().split(/[_-]+/)[0] || 'en';
     this.state = {
-      dopplerSession: this.dopplerSessionManager.session,
+      dopplerSession: this.sessionManager.session,
       i18n: {
         locale: locale,
         messages: flattenMessages(messages[locale]),
@@ -36,13 +45,13 @@ class App extends Component {
   }
 
   componentDidMount() {
-    this.dopplerSessionManager.initialize((s) => {
+    this.sessionManager.initialize((s) => {
       this.setState({ dopplerSession: s });
     });
   }
 
   componentWillUnmount() {
-    this.dopplerSessionManager.finalize();
+    this.sessionManager.finalize();
   }
 
   render() {

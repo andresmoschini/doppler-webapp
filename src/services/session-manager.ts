@@ -1,29 +1,33 @@
-import axios from 'axios';
+import { DopplerMvcClient } from './doppler-mvc-client';
 
-type SessionStatus = 'unknown' | 'authenticated' | 'not-authenticated';
+type SessionStatus = 'unknown' | 'authenticated' | 'non-authenticated';
 
-interface DopplerSession {
+interface AppSession {
   status: SessionStatus;
 }
 
 const noop = () => {};
 
-const defaultSession: DopplerSession = {
+const defaultSession: AppSession = {
   status: 'unknown',
 };
 
-export class DopplerSessionManager {
-  private currentSession: DopplerSession = { ...defaultSession };
-  private handler: (s: DopplerSession) => void = noop;
+export interface SessionManager {
+  session: AppSession;
+}
+
+export class OnlineSessionManager implements SessionManager {
+  private currentSession: AppSession = { ...defaultSession };
+  private handler: (s: AppSession) => void = noop;
   private dopplerInterval: number | null = null;
 
-  constructor(private keepAliveMilliseconds: number = 60000) {}
+  constructor(private dopplerMvcClient: DopplerMvcClient, private keepAliveMilliseconds: number) {}
 
   public get session() {
     return this.currentSession;
   }
 
-  public initialize(handler: (s: DopplerSession) => void) {
+  public initialize(handler: (s: AppSession) => void) {
     this.handler = handler;
     this.update();
     this.dopplerInterval = window.setInterval(() => {
@@ -45,7 +49,8 @@ export class DopplerSessionManager {
 
   private async update() {
     try {
-      const dopplerUserData = await this.getDopplerUserData();
+      const dopplerUserData = await this.dopplerMvcClient.getUserData();
+
       // TODO: do something with dopplerUserData
 
       // TODO: deal with JWT Token
@@ -57,31 +62,17 @@ export class DopplerSessionManager {
   }
 
   private logOut() {
+    this.redirect();
+    this.dispatch({ status: 'non-authenticated' });
+  }
+
+  // TODO: move into a dependency
+  private redirect() {
     const currentUrlEncoded = encodeURI(window.location.href);
     // TODO: only use redirect on login, not in logout
     const loginUrl = `${process.env.REACT_APP_API_URL}/SignIn/index?redirect=${currentUrlEncoded}`;
-
-    this.dispatch({ status: 'not-authenticated' });
-
     window.setTimeout(() => {
       window.location.href = loginUrl;
     }, 0);
-  }
-
-  private async getDopplerUserData() {
-    const response = await axios.get(
-      process.env.REACT_APP_API_URL + '/Reports/Reports/GetUserData',
-      {
-        withCredentials: true,
-      },
-    );
-
-    if (!response || !response.data || response.data.Email) {
-      throw new Error('Empty Doppler response');
-    }
-
-    return {
-      email: response.data.Email,
-    };
   }
 }
