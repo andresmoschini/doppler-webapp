@@ -7,9 +7,9 @@ import es from 'react-intl/locale-data/es';
 import messages_es from './i18n/es.json';
 import messages_en from './i18n/en.json';
 import { flattenMessages } from './utils';
-import jwt_decode from 'jwt-decode';
 import axios from 'axios';
-
+import { HttpDopplerMvcClient } from './services/doppler-mvc-client';
+import { OnlineSessionManager } from './services/session-manager';
 import Header from './components/Header/Header';
 import Footer from './components/Footer/Footer';
 
@@ -24,9 +24,17 @@ class App extends Component {
   constructor(props) {
     super(props);
 
+    // TODO: Consider continue determining here default instance or moving all upside,
+    // forcing inject dependencies always
+    this.sessionManager =
+      (props.dependencies && props.dependencies.sessionManager) ||
+      new OnlineSessionManager(
+        new HttpDopplerMvcClient(axios, process.env.REACT_APP_API_URL),
+        60000,
+      );
+
     this.state = {
-      user: null,
-      loginSession: {},
+      dopplerSession: this.sessionManager.session,
       i18n: {
         locale: props.locale,
         messages: flattenMessages(messages[props.locale]),
@@ -34,81 +42,18 @@ class App extends Component {
     };
   }
 
-  componentWillMount() {
-    this.getUserData();
-    this.interval = setInterval(() => {
-      this.getUserData();
-    }, 60000);
+  componentDidMount() {
+    this.sessionManager.initialize((s) => {
+      this.setState({ dopplerSession: s });
+    });
   }
 
   componentWillUnmount() {
-    clearInterval(this.interval);
-  }
-
-  manageJwtToken() {
-    var encodedToken = localStorage.getItem('jwtToken');
-    if (encodedToken) {
-      try {
-        this.setState({ loginSession: this.decodeLoginSession(encodedToken) });
-        if (this.state.user.Email !== this.state.loginSession.email) {
-          this.saveStoredSession(this.state.loginSession);
-        }
-      } catch (error) {
-        this.logOut();
-        return;
-      }
-    } else {
-      axios
-        .get(process.env.REACT_APP_API_URL + '/Reports/Reports/GetJwtToken', {
-          withCredentials: 'include',
-        })
-        .then((response) => {
-          this.saveStoredSession({ token: response.data.jwtToken });
-        })
-        .catch((error) => {
-          this.logOut();
-        });
-    }
-  }
-
-  getUserData() {
-    axios
-      .get(process.env.REACT_APP_API_URL + '/Reports/Reports/GetUserData', {
-        withCredentials: 'include',
-      })
-      .then((response) => {
-        this.setState({ user: response.data.user });
-        this.manageJwtToken();
-      })
-      .catch((error) => {
-        this.logOut();
-      });
-  }
-
-  decodeLoginSession(jwtToken) {
-    var decodedToken = jwt_decode(jwtToken);
-    return {
-      token: jwtToken,
-      email: decodedToken.email,
-      name: decodedToken.name,
-      lang: decodedToken.lang,
-    };
-  }
-
-  saveStoredSession(loginSession) {
-    localStorage.setItem('jwtToken', loginSession.token);
-  }
-
-  logOut() {
-    localStorage.removeItem('jwtToken');
-    const currentUrlEncoded = encodeURI(window.location.href);
-    // TODO: only use redirect on login, not in logout
-    const loginUrl = `${process.env.REACT_APP_API_URL}/SignIn/index?redirect=${currentUrlEncoded}`;
-    window.location.href = loginUrl;
+    this.sessionManager.finalize();
   }
 
   render() {
-    const isLoggedIn = !!this.state.user;
+    const isLoggedIn = this.state.dopplerSession.status === 'authenticated';
     const i18n = this.state.i18n;
     return (
       <IntlProvider locale={i18n.locale} messages={i18n.messages}>
