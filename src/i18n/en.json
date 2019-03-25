@@ -40,7 +40,8 @@
     "visits_without_emails": "Visits without emails"
   },
   "validation_messages": {
-    "error_required_field": "Ouch! The field is empty."
+    "error_required_field": "Ouch! The field is empty",
+    "error_invalid_email_address": "Ouch! Invalid email address"
   },
   "signup": {
     "do_you_already_have_an_account": "Already have an account?",

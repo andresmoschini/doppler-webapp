@@ -34,7 +34,8 @@
   },
   "reports_title": "Doppler | Reportes",
   "validation_messages": {
-    "error_required_field": "¡Ouch! El campo está vacío."
+    "error_required_field": "¡Ouch! El campo está vacío",
+    "error_invalid_email_address": "¡Ouch! El formato del email es incorrecto"
   },
   "reports_box": {
     "visits_with_email": "Visitas con emails",
