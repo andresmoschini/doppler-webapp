@@ -29,7 +29,8 @@
   "common": {
     "message": "Message",
     "send": "Send",
-    "cancel": "Cancel"
+    "cancel": "Cancel",
+    "help": "Help"
   },
   "reports_title": "Doppler | Reports",
   "reports_box": {
@@ -40,5 +41,35 @@
   },
   "validation_messages": {
     "error_required_field": "Ouch! The field is empty."
+  },
+  "signup": {
+    "do_you_already_have_an_account": "Already have an account?",
+    "log_in": "Log In",
+    "sign_up": "Sign Up",
+    "sign_up_sub": "No contracts or credit cards required, up to 500 Subscribers.",
+    "label_firstname": "Name: ",
+    "placeholder_firstname": "Name",
+    "label_lastname": "Lastname: ",
+    "placeholder_lastname": "Lastname",
+    "label_phone": "Phone: ",
+    "placeholder_phone": "9 11 2345-6789",
+    "label_email": "Email: ",
+    "placeholder_email": "Your Email will be your Username",
+    "label_password": "Password: ",
+    "placeholder_password": "Enter your secret key",
+    "privacy_policy_consent_HTML": "I accept Doppler's <a class=\"link-green\" href=\"https://www.fromdoppler.com/en/legal/privacy-policy\">Privacy Policy</a>.",
+    "promotions_consent": "Sign me up for promotions about Doppler and its partners.",
+    "button_signup": "Sign Up",
+    "copyright": "© {year} Doppler LLC. Todos los derechos reservados.",
+    "//TODO": "TRANSLATE THE FOLLOWING ENTRIES:",
+    "legal_HTML": "\n<p>Doppler te informa que los datos de carácter personal que nos proporciones al rellenar el presente formulario serán tratados por Making Sense LLC (Doppler) como responsable de esta web.</p>\n<p><strong>Finalidad:</strong> Darte de alta en nuestra plataforma y brindarte los servicios que nos requieras.</p>\n<p><strong>Legitimación:</strong> Consentimiento del interesado.</p>\n<p><strong>Destinatarios:</strong> Tus datos serán guardados por Doppler, Zoho como CRM, Digital Ocean, Cogeco Peer1 y Rackspace como empresas de hosting.</p>\n<p><strong>Información adicional:</strong> En la <a class=\"link-green\" href=\"https://www.fromdoppler.com/en/legal/privacy-policy\">Privacy Policy</a> de Doppler encontrarás información adicional sobre la recopilación y el uso de su información personal por parte de Doppler, incluida información sobre acceso, conservación, rectificación, eliminación, seguridad, transferencias transfronterizas y otros temas.</p>",
+    "promotion_code_reminder": "Pst! si tienes un código promocional podrás ingresarlo al confirmar tu cuenta.",
+    "promotion_code_help_url": "https://help.fromdoppler.com/en/how-to-activate-my-promo-code"
+  },
+  "feature_panel": {
+    "//TODO": "TRANSLATE THE FOLLOWING ENTRIES:",
+    "email_editor": "Emails Editor",
+    "email_editor_description": "Crea Emails en minutos y accede a nuestra Galería de Plantillas",
+    "email_editor_remarks": "Nuestras Plantillas para Email son totalmente Responsive y fácilmente editables desde nuestro Editor HTML."
   }
 }
