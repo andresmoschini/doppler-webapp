@@ -44,17 +44,29 @@ const Signup = function({ intl, dependencies: { dopplerLegacyClient } }) {
   const _ = (id, values) => intl.formatMessage({ id: id }, values);
 
   const [registeredUser, setRegisteredUser] = useState(null);
+  const [alreadyExistentAddresses, setAlreadyExistentAddresses] = useState([]);
 
   if (registeredUser) {
     const resend = () => dopplerLegacyClient.resendRegistrationEmail(registeredUser);
     return <SignupConfirmation resend={resend} />;
   }
 
+  const validate = (values) => {
+    const errors = {};
+    if (values[fieldNames.email] && alreadyExistentAddresses.includes(values[fieldNames.email])) {
+      errors[fieldNames.email] = 'validation_messages.error_email_already_exists';
+    }
+    return errors;
+  };
+
   const onSubmit = async (values, { setSubmitting, setErrors, validateForm }) => {
     try {
       const result = await dopplerLegacyClient.registerUser(values);
       if (result.success) {
         setRegisteredUser(values[fieldNames.email]);
+      } else if (!result.unexpectedError && result.emailAlreadyExists) {
+        setAlreadyExistentAddresses(x => [...x, values[fieldNames.email]])
+        validateForm();
       } else {
         console.log("Unexpected error", result);
         setErrors({ _general: 'validation_messages.error_unexpected' });
@@ -79,7 +91,7 @@ const Signup = function({ intl, dependencies: { dopplerLegacyClient } }) {
             {_('signup.log_in')}
           </Link>
         </p>
-        <Formik initialValues={getFormInitialValues()} onSubmit={onSubmit}>
+        <Formik initialValues={getFormInitialValues()} onSubmit={onSubmit} validate={validate} >
           <Form className="signup-form">
             <fieldset>
               <FieldGroup>
