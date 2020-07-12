@@ -234,7 +234,7 @@ export class HardcodedDopplerApiClient implements DopplerApiClient {
 
   public async getSubscriber(
     email: string,
-    apikey: string,
+    apikey: string, // why are we including the apikey as a parameter?
   ): Promise<ResultWithoutExpectedErrors<Subscriber>> {
     console.log('getApiSubscriber');
     await timeout(1500);
